@@ -1,0 +1,42 @@
+<html>
+<head>
+ <meta charset="utf-8">
+ <script src="https://ajax.googleapis.com/ajax/libs/cesiumjs/1.105/Build/Cesium/Cesium.js"></script>
+ <link href="https://ajax.googleapis.com/ajax/libs/cesiumjs/1.105/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+ <link href="styles.css" rel="stylesheet">
+</head>
+
+<body>
+  <div id="cesiumContainer"></div>
+  <div id="controlPanel">
+    <div class="panel-header">
+      <h2>Worker Control Panel</h2>
+      <button id="togglePanel" title="Minimize control panel">−</button>
+    </div>
+    <div class="panel-content">
+      <div id="workerControls">
+        <div class="control-group">
+          <h3>Animation Speed</h3>
+          <input type="range" id="speedControl" min="1" max="10" value="5">
+          <span id="speedValue">5s</span>
+        </div>
+      </div>
+      <div id="workerStatus">
+        <h3>Worker Status</h3>
+        <div id="statusList"></div>
+      </div>
+      <div id="alerts"></div>
+    </div>
+  </div>
+  
+  <div id="hazardAlert" class="hazard-alert hidden">
+    <div class="hazard-alert-content">
+      <h3>⚠️ HAZARD ZONE ALERT</h3>
+      <p id="hazardMessage">A worker has entered the hazardous zone!</p>
+      <button id="closeHazardAlert">Acknowledge</button>
+    </div>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,847 @@
+<div id="cesium-widget-container">
+  <style>
+    /* Container styles to isolate widget from Webflow styles */
+    #cesium-widget-container {
+      position: relative;
+      width: 100%;
+      height: 600px; /* Adjust height as needed */
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-size: 16px;
+      line-height: 1.5;
+      color: #333333;
+      text-align: left;
+      box-sizing: border-box;
+    }
+
+    /* Reset all elements to use our styles instead of Webflow's */
+    #cesium-widget-container * {
+      font-family: inherit;
+      line-height: inherit;
+      color: inherit;
+      box-sizing: inherit;
+    }
+
+    /* Cesium container for the 3D map */
+    #cesium-widget-container #cesiumContainer {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      position: absolute;
+    }
+
+    /* Control panel styles */
+    #cesium-widget-container #controlPanel {
+      position: absolute;
+      top: 80px;
+      right: 20px;
+      width: 300px;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      transition: transform 0.3s ease-in-out;
+      font-size: 14px;
+      color: #333333;
+    }
+
+    #cesium-widget-container #controlPanel.minimized {
+      transform: translateX(calc(100% - 85px));
+    }
+
+    #cesium-widget-container #controlPanel.minimized .panel-header {
+      transform: translateX(-20px);
+      width: 85px;
+    }
+
+    #cesium-widget-container #controlPanel.minimized .panel-header h2 {
+      width: 0;
+      overflow: hidden;
+      margin: 0;
+      padding: 0;
+    }
+
+    #cesium-widget-container #controlPanel.minimized .panel-content {
+      display: none;
+    }
+
+    #cesium-widget-container #controlPanel.minimized #togglePanel {
+      margin-left: 10px;
+      font-size: 28px;
+      padding: 10px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 5px;
+    }
+
+    #cesium-widget-container .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    #cesium-widget-container .panel-header h2 {
+      margin: 0;
+      color: #333333;
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0;
+      text-transform: none;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.2;
+      text-align: left;
+    }
+
+    #cesium-widget-container #togglePanel {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #666666;
+      cursor: pointer;
+      padding: 0 8px;
+      transition: transform 0.3s ease;
+      font-weight: normal;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      text-decoration: none;
+    }
+
+    #cesium-widget-container #togglePanel:hover {
+      color: #333333;
+    }
+
+    #cesium-widget-container #controlPanel h3 {
+      margin: 10px 0;
+      color: #555555;
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1.2;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      letter-spacing: 0;
+      text-transform: none;
+      text-align: left;
+    }
+
+    #cesium-widget-container .control-group {
+      margin-bottom: 20px;
+    }
+
+    #cesium-widget-container input[type="range"] {
+      width: 100%;
+      margin: 10px 0;
+    }
+
+    #cesium-widget-container select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #dddddd;
+      background: white;
+      font-size: 14px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      color: #333333;
+    }
+
+    #cesium-widget-container #speedValue {
+      font-size: 14px;
+      font-weight: normal;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      color: #333333;
+    }
+
+    #cesium-widget-container #workerStatus {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #dddddd;
+    }
+
+    #cesium-widget-container .worker-status-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 5px;
+      border-left: 4px solid #dddddd;
+      font-size: 14px;
+      font-weight: normal;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.4;
+      color: #333333;
+      text-align: left;
+    }
+
+    #cesium-widget-container .worker-status-item.safe {
+      border-left-color: #4CAF50;
+    }
+
+    #cesium-widget-container .worker-status-item.warning {
+      border-left-color: #FFC107;
+    }
+
+    #cesium-widget-container .worker-status-item.danger {
+      border-left-color: #F44336;
+    }
+
+    #cesium-widget-container #alerts {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #dddddd;
+    }
+
+    #cesium-widget-container .alert {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      background: #F44336;
+      color: white;
+      animation: fadeIn 0.3s ease-in-out;
+      font-size: 14px;
+      font-weight: normal;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.4;
+      text-align: left;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #cesium-widget-container .weather-effect {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    #cesium-widget-container .raindrop {
+      position: absolute;
+      width: 2px;
+      height: 20px;
+      background: linear-gradient(transparent, rgba(255, 255, 255, 0.8));
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      from { transform: translateY(-120vh) rotate(15deg); }
+      to { transform: translateY(120vh) rotate(15deg); }
+    }
+
+    #cesium-widget-container .hazard-alert {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: auto;
+      height: auto;
+      max-width: 350px;
+      background-color: transparent;
+      z-index: 2000;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    #cesium-widget-container .hazard-alert.hidden {
+      display: none;
+    }
+
+    #cesium-widget-container .hazard-alert-content {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: left;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      border-left: 10px solid #F44336;
+    }
+
+    #cesium-widget-container .hazard-alert-content h3 {
+      color: #F44336;
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 18px;
+      font-weight: 600;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.2;
+      display: flex;
+      align-items: center;
+      letter-spacing: 0;
+      text-transform: none;
+      text-align: left;
+    }
+
+    #cesium-widget-container .hazard-alert-content p {
+      margin: 10px 0;
+      font-size: 14px;
+      font-weight: normal;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.4;
+      color: #333333;
+      text-align: left;
+    }
+
+    #cesium-widget-container #closeHazardAlert {
+      background-color: #F44336;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 5px;
+      font-size: 14px;
+      font-weight: normal;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      line-height: 1.2;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      display: block;
+      margin-left: auto;
+      text-decoration: none;
+      text-transform: none;
+      letter-spacing: 0;
+      text-align: center;
+    }
+
+    #cesium-widget-container #closeHazardAlert:hover {
+      background-color: #d32f2f;
+    }
+
+    /* Add styles for Cesium entity labels */
+    .cesium-viewer .cesium-entity-label {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+      font-size: 14px !important;
+      font-weight: normal !important;
+      color: inherit !important;
+    }
+  </style>
+
+  <!-- Map container for Cesium -->
+  <div id="cesiumContainer"></div>
+
+  <!-- Control Panel -->
+  <div id="controlPanel">
+    <div class="panel-header">
+      <h2>Worker Control Panel</h2>
+      <button id="togglePanel" title="Minimize control panel">−</button>
+    </div>
+    <div class="panel-content">
+      <div id="workerControls">
+        <div class="control-group">
+          <h3>Animation Speed</h3>
+          <input type="range" id="speedControl" min="1" max="10" value="5">
+          <span id="speedValue">5s</span>
+        </div>
+      </div>
+      <div id="workerStatus">
+        <h3>Worker Status</h3>
+        <div id="statusList"></div>
+      </div>
+      <div id="alerts"></div>
+    </div>
+  </div>
+
+  <!-- Hazard Alert -->
+  <div id="hazardAlert" class="hazard-alert hidden">
+    <div class="hazard-alert-content">
+      <h3>⚠️ HAZARD ZONE ALERT</h3>
+      <p id="hazardMessage">A worker has entered the hazardous zone!</p>
+      <button id="closeHazardAlert">Acknowledge</button>
+    </div>
+  </div>
+
+  <!-- Cesium JS & Widget CSS are loaded from the CDN -->
+  <link href="https://ajax.googleapis.com/ajax/libs/cesiumjs/1.105/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <script src="https://ajax.googleapis.com/ajax/libs/cesiumjs/1.105/Build/Cesium/Cesium.js" defer></script>
+
+  <script defer>
+    window.addEventListener('load', function() {
+      Cesium.Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+      
+      // Initialize Cesium viewer targeting our encapsulated container
+      const viewer = new Cesium.Viewer(document.getElementById('cesiumContainer'), {
+          imageryProvider: new Cesium.createWorldImagery({
+              style: Cesium.IonWorldImageryStyle.AERIAL
+          }),
+          baseLayerPicker: false,
+          requestRenderMode: true,
+          creditContainer: document.createElement('div'),
+          animation: false,
+          geocoder: false,
+          timeline: false,
+          sceneModePicker: false,
+          navigationHelpButton: true,
+          homeButton: false,
+          infoBox: false,
+          selectionIndicator: false,
+          terrainProvider: Cesium.createWorldTerrain()
+      });
+
+      // Camera controls
+      viewer.scene.screenSpaceCameraController.enableRotate = true;
+      viewer.scene.screenSpaceCameraController.enableTranslate = true;
+      viewer.scene.screenSpaceCameraController.enableZoom = true;
+      viewer.scene.screenSpaceCameraController.enableTilt = true;
+      viewer.scene.screenSpaceCameraController.enableLook = true;
+      viewer.scene.screenSpaceCameraController.rotateEventTypes = [
+          Cesium.CameraEventType.LEFT_DRAG,
+          Cesium.CameraEventType.RIGHT_DRAG,
+          Cesium.CameraEventType.MIDDLE_DRAG
+      ];
+
+      // Load Google 3D Tiles
+      const tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+          url: "https://tile.googleapis.com/v1/3dtiles/root.json?key=AIzaSyA8C9_h4ZqzKWDRJNNG3677SYaZgZ9XSWg",
+          showCreditsOnScreen: true,
+      }));
+
+      viewer.scene.globe.enableLighting = true;
+      viewer.scene.globe.show = false;
+
+      // Initial camera flyTo sequence
+      viewer.camera.flyTo({
+          destination: Cesium.Cartesian3.fromDegrees(-94.998571, 29.742848, 5000),
+          duration: 5,
+          complete: function() {
+              setTimeout(function() {
+                  viewer.camera.flyTo({
+                      destination: Cesium.Cartesian3.fromDegrees(-94.9960463696682, 29.739476474124718, 106.30991509431206),
+                      orientation: {
+                          heading: 5.475943510971197,
+                          pitch: -0.2776868961099246,
+                          roll: 0.000005434500673473508
+                      },
+                      duration: 10
+                  });
+              }, 500);
+          }
+      });
+
+      // Worker paths and color definitions
+      const paths = [
+          // Worker 1 - Red
+          [
+              { longitude: -94.999029, latitude: 29.743500 },
+              { longitude: -94.998800, latitude: 29.743300 },
+              { longitude: -94.998600, latitude: 29.743000 },
+              { longitude: -94.998400, latitude: 29.742700 },
+              { longitude: -94.998200, latitude: 29.742400 },
+              { longitude: -94.998000, latitude: 29.742100 },
+              { longitude: -94.998200, latitude: 29.741800 },
+              { longitude: -94.998600, latitude: 29.741500 },
+              { longitude: -94.999000, latitude: 29.741200 },
+              { longitude: -94.999400, latitude: 29.740900 },
+              { longitude: -94.999600, latitude: 29.740600 },
+              { longitude: -94.999800, latitude: 29.740300 },
+              { longitude: -95.000000, latitude: 29.740600 },
+              { longitude: -95.000200, latitude: 29.740900 },
+              { longitude: -95.000400, latitude: 29.741200 },
+              { longitude: -95.000600, latitude: 29.741500 },
+              { longitude: -95.000400, latitude: 29.741800 },
+              { longitude: -95.000200, latitude: 29.742100 },
+              { longitude: -95.000000, latitude: 29.742400 },
+              { longitude: -94.999800, latitude: 29.742700 },
+              { longitude: -94.999600, latitude: 29.743000 },
+              { longitude: -94.999400, latitude: 29.743300 },
+              { longitude: -94.999200, latitude: 29.743400 },
+          ],
+          // Worker 2 - Green
+          [
+              { longitude: -94.997800, latitude: 29.743000 },
+              { longitude: -94.997600, latitude: 29.742800 },
+              { longitude: -94.997400, latitude: 29.742600 },
+              { longitude: -94.997200, latitude: 29.742400 },
+              { longitude: -94.997000, latitude: 29.742200 },
+              { longitude: -94.996800, latitude: 29.742000 },
+              { longitude: -94.997000, latitude: 29.741800 },
+              { longitude: -94.997200, latitude: 29.741600 },
+              { longitude: -94.997400, latitude: 29.741400 },
+              { longitude: -94.997600, latitude: 29.741200 },
+              { longitude: -94.997800, latitude: 29.741000 },
+              { longitude: -94.998000, latitude: 29.740800 },
+              { longitude: -94.998200, latitude: 29.740600 },
+              { longitude: -94.998400, latitude: 29.740400 },
+              { longitude: -94.998381, latitude: 29.740377 },
+              { longitude: -94.998600, latitude: 29.740200 },
+              { longitude: -94.998800, latitude: 29.740000 },
+              { longitude: -94.999000, latitude: 29.740200 },
+              { longitude: -94.999200, latitude: 29.740400 },
+              { longitude: -94.999000, latitude: 29.740600 },
+              { longitude: -94.998800, latitude: 29.740800 },
+              { longitude: -94.998600, latitude: 29.741000 },
+              { longitude: -94.998400, latitude: 29.741200 },
+              { longitude: -94.998200, latitude: 29.741400 },
+              { longitude: -94.998000, latitude: 29.741600 },
+              { longitude: -94.997800, latitude: 29.741800 },
+              { longitude: -94.997600, latitude: 29.742000 },
+              { longitude: -94.997400, latitude: 29.742200 },
+              { longitude: -94.997600, latitude: 29.742400 },
+              { longitude: -94.997800, latitude: 29.742600 },
+              { longitude: -94.998000, latitude: 29.742800 },
+          ],
+          // Worker 3 - Blue
+          [
+              { longitude: -94.999400, latitude: 29.743800 },
+              { longitude: -94.999200, latitude: 29.743600 },
+              { longitude: -94.999000, latitude: 29.743400 },
+              { longitude: -94.998800, latitude: 29.743200 },
+              { longitude: -94.998600, latitude: 29.743000 },
+              { longitude: -94.998400, latitude: 29.742800 },
+              { longitude: -94.998200, latitude: 29.742600 },
+              { longitude: -94.998000, latitude: 29.742400 },
+              { longitude: -94.997800, latitude: 29.742200 },
+              { longitude: -94.997600, latitude: 29.742000 },
+              { longitude: -94.997400, latitude: 29.741800 },
+              { longitude: -94.997600, latitude: 29.741600 },
+              { longitude: -94.997800, latitude: 29.741400 },
+              { longitude: -94.998000, latitude: 29.741200 },
+              { longitude: -94.998200, latitude: 29.741000 },
+              { longitude: -94.998400, latitude: 29.740800 },
+              { longitude: -94.998600, latitude: 29.740600 },
+              { longitude: -94.998800, latitude: 29.740400 },
+              { longitude: -94.999000, latitude: 29.740200 },
+              { longitude: -94.999200, latitude: 29.740000 },
+              { longitude: -94.999400, latitude: 29.739800 },
+              { longitude: -94.999600, latitude: 29.739891 },
+              { longitude: -94.999800, latitude: 29.740000 },
+              { longitude: -95.000000, latitude: 29.740200 },
+              { longitude: -95.000200, latitude: 29.740400 },
+              { longitude: -95.000400, latitude: 29.740600 },
+              { longitude: -95.000600, latitude: 29.740800 },
+              { longitude: -95.000800, latitude: 29.741000 },
+              { longitude: -95.001000, latitude: 29.741200 },
+              { longitude: -95.000800, latitude: 29.741400 },
+              { longitude: -95.000600, latitude: 29.741600 },
+              { longitude: -95.000400, latitude: 29.741800 },
+              { longitude: -95.000200, latitude: 29.742000 },
+              { longitude: -95.000000, latitude: 29.742200 },
+              { longitude: -94.999800, latitude: 29.742400 },
+              { longitude: -94.999600, latitude: 29.742600 },
+              { longitude: -94.999800, latitude: 29.742800 },
+              { longitude: -95.000000, latitude: 29.743000 },
+              { longitude: -95.000200, latitude: 29.743200 },
+              { longitude: -95.000000, latitude: 29.743400 },
+              { longitude: -94.999800, latitude: 29.743600 },
+              { longitude: -94.999600, latitude: 29.743800 },
+          ],
+          // Worker 4 - Yellow
+          [
+              { longitude: -94.996800, latitude: 29.743800 },
+              { longitude: -94.997000, latitude: 29.743600 },
+              { longitude: -94.997200, latitude: 29.743400 },
+              { longitude: -94.997400, latitude: 29.743200 },
+              { longitude: -94.997600, latitude: 29.743000 },
+              { longitude: -94.997800, latitude: 29.742800 },
+              { longitude: -94.998000, latitude: 29.742600 },
+              { longitude: -94.998200, latitude: 29.742400 },
+              { longitude: -94.998400, latitude: 29.742200 },
+              { longitude: -94.998600, latitude: 29.742000 },
+              { longitude: -94.998800, latitude: 29.741800 },
+              { longitude: -94.999000, latitude: 29.741600 },
+              { longitude: -94.999200, latitude: 29.741400 },
+              { longitude: -94.999400, latitude: 29.741200 },
+              { longitude: -94.999600, latitude: 29.741000 },
+              { longitude: -94.999800, latitude: 29.740800 },
+              { longitude: -95.000000, latitude: 29.740600 },
+              { longitude: -95.000200, latitude: 29.740400 },
+              { longitude: -95.000400, latitude: 29.740200 },
+              { longitude: -95.000600, latitude: 29.740000 },
+              { longitude: -95.000800, latitude: 29.739800 },
+              { longitude: -95.001000, latitude: 29.740000 },
+              { longitude: -95.001200, latitude: 29.740200 },
+              { longitude: -95.001400, latitude: 29.740400 },
+              { longitude: -95.001600, latitude: 29.740600 },
+              { longitude: -95.001800, latitude: 29.740800 },
+              { longitude: -95.002000, latitude: 29.741000 },
+              { longitude: -95.002200, latitude: 29.741200 },
+              { longitude: -95.002000, latitude: 29.741400 },
+              { longitude: -95.001800, latitude: 29.741600 },
+              { longitude: -95.001600, latitude: 29.741800 },
+              { longitude: -95.001400, latitude: 29.742000 },
+              { longitude: -95.001200, latitude: 29.742200 },
+              { longitude: -95.001000, latitude: 29.742400 },
+              { longitude: -95.000800, latitude: 29.742600 },
+              { longitude: -95.000600, latitude: 29.742800 },
+              { longitude: -95.000400, latitude: 29.743000 },
+              { longitude: -95.000200, latitude: 29.743200 },
+              { longitude: -95.000000, latitude: 29.743400 },
+              { longitude: -94.999800, latitude: 29.743600 },
+              { longitude: -94.999600, latitude: 29.743800 },
+              { longitude: -94.999400, latitude: 29.744000 },
+              { longitude: -94.999200, latitude: 29.744200 },
+              { longitude: -94.999000, latitude: 29.744000 },
+              { longitude: -94.998800, latitude: 29.743800 },
+              { longitude: -94.998600, latitude: 29.743600 },
+              { longitude: -94.998400, latitude: 29.743400 },
+              { longitude: -94.998200, latitude: 29.743200 },
+              { longitude: -94.998000, latitude: 29.743000 },
+              { longitude: -94.997800, latitude: 29.743200 },
+              { longitude: -94.997600, latitude: 29.743400 },
+              { longitude: -94.997400, latitude: 29.743600 },
+              { longitude: -94.997200, latitude: 29.743800 },
+              { longitude: -94.997000, latitude: 29.744000 },
+          ],
+      ];
+
+      const colors = [Cesium.Color.RED, Cesium.Color.GREEN, Cesium.Color.BLUE, Cesium.Color.YELLOW];
+
+      // Create hazard zone polygon vertices
+      const hazardZoneVertices = [
+          Cesium.Cartesian3.fromDegrees(-94.999028, 29.741748, 0),
+          Cesium.Cartesian3.fromDegrees(-94.998381, 29.741377, 0),
+          Cesium.Cartesian3.fromDegrees(-94.99947730766101, 29.739891707833397, 0),
+          Cesium.Cartesian3.fromDegrees(-95.0006285442912, 29.740520027778356, 0),
+          Cesium.Cartesian3.fromDegrees(-94.9999378023131, 29.7414910599502, 0),
+          Cesium.Cartesian3.fromDegrees(-94.99904970548407, 29.74182425509735, 0)
+      ];
+
+      // Create workers with trails
+      const workers = paths.map((path, index) => {
+          const trailPositions = [];
+          const firstPosition = Cesium.Cartesian3.fromDegrees(path[0].longitude, path[0].latitude, -21);
+          trailPositions.push(firstPosition);
+          const trail = viewer.entities.add({
+              polyline: {
+                  positions: new Cesium.CallbackProperty(() => trailPositions.slice(), false),
+                  width: 2,
+                  material: new Cesium.PolylineGlowMaterialProperty({
+                      glowPower: 0.2,
+                      color: colors[index].withAlpha(0.5)
+                  })
+              }
+          });
+          return {
+              entity: viewer.entities.add({
+                  position: firstPosition,
+                  point: { pixelSize: 10, color: colors[index] },
+                  label: {
+                      text: `Worker ${index+1}`,
+                      fillColor: colors[index],
+                      showBackground: true,
+                      backgroundColor: Cesium.Color.WHITE.withAlpha(0.7),
+                      font: '14px sans-serif',
+                      style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+                      verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+                      pixelOffset: new Cesium.Cartesian2(0, -20),
+                  }
+              }),
+              path: path,
+              currentPathIndex: 0,
+              trailPositions: trailPositions,
+              trail: trail,
+              lastUpdate: Date.now(),
+              number: index + 1
+          };
+      });
+
+      // Add hazardous zone entity
+      const hazardZone = viewer.entities.add({
+          name: 'Hazardous Zone',
+          polygon: {
+              hierarchy: new Cesium.PolygonHierarchy(hazardZoneVertices),
+              material: Cesium.Color.RED.withAlpha(0.5),
+              outline: true,
+              outlineColor: Cesium.Color.RED,
+              height: -21
+          }
+      });
+
+      // Control panel functionality
+      let updateInterval = 5000;
+      const speedControl = document.getElementById('speedControl');
+      const statusList = document.getElementById('statusList');
+      const alertsContainer = document.getElementById('alerts');
+      const toggleButton = document.getElementById('togglePanel');
+      const controlPanel = document.getElementById('controlPanel');
+      const hazardAlert = document.getElementById('hazardAlert');
+      const hazardMessage = document.getElementById('hazardMessage');
+      const closeHazardAlertBtn = document.getElementById('closeHazardAlert');
+
+      let workersInHazardZone = [];
+      let userAcknowledged = false;
+
+      toggleButton.addEventListener('click', () => {
+          controlPanel.classList.toggle('minimized');
+          if (controlPanel.classList.contains('minimized')) {
+              toggleButton.textContent = '+';
+              toggleButton.title = "Expand control panel";
+          } else {
+              toggleButton.textContent = '−';
+              toggleButton.title = "Minimize control panel";
+          }
+      });
+
+      closeHazardAlertBtn.addEventListener('click', () => {
+          hazardAlert.classList.add('hidden');
+          userAcknowledged = true;
+      });
+
+      speedControl.addEventListener('input', (e) => {
+          updateInterval = (11 - e.target.value) * 1000;
+          document.getElementById('speedValue').textContent = `${11 - e.target.value}s`;
+          resetInterval();
+      });
+
+      function updateHazardAlert() {
+          if (workersInHazardZone.length > 0 && !userAcknowledged) {
+              if (workersInHazardZone.length === 1) {
+                  hazardMessage.textContent = `Worker ${workersInHazardZone[0]} has entered the hazardous zone!`;
+              } else {
+                  const workersList = workersInHazardZone.join(', ');
+                  hazardMessage.textContent = `Workers ${workersList} have entered the hazardous zone!`;
+              }
+              if (hazardAlert.classList.contains('hidden')) {
+                  hazardAlert.classList.remove('hidden');
+              }
+          } else {
+              if (!hazardAlert.classList.contains('hidden') && workersInHazardZone.length === 0) {
+                  hazardAlert.classList.add('hidden');
+                  userAcknowledged = false;
+              }
+          }
+      }
+
+      function calculateDistanceToHazard(position) {
+          try {
+              const hazardPositions = hazardZoneVertices;
+              if (isPointInPolygon(position, hazardPositions)) {
+                  return 0;
+              }
+              let minDistance = Number.MAX_VALUE;
+              for (let i = 0; i < hazardPositions.length; i++) {
+                  const start = hazardPositions[i];
+                  const end = hazardPositions[(i + 1) % hazardPositions.length];
+                  const distance = distanceToLineSegment(position, start, end);
+                  minDistance = Math.min(minDistance, distance);
+              }
+              return minDistance;
+          } catch (error) {
+              console.error("Error calculating distance:", error);
+              return 1000;
+          }
+      }
+
+      function distanceToLineSegment(point, lineStart, lineEnd) {
+          const v = Cesium.Cartesian3.subtract(lineEnd, lineStart, new Cesium.Cartesian3());
+          const w = Cesium.Cartesian3.subtract(point, lineStart, new Cesium.Cartesian3());
+          const c1 = Cesium.Cartesian3.dot(w, v);
+          if (c1 <= 0) {
+              return Cesium.Cartesian3.distance(point, lineStart);
+          }
+          const c2 = Cesium.Cartesian3.dot(v, v);
+          if (c2 <= c1) {
+              return Cesium.Cartesian3.distance(point, lineEnd);
+          }
+          const b = c1 / c2;
+          const pb = Cesium.Cartesian3.add(lineStart, Cesium.Cartesian3.multiplyByScalar(v, b, new Cesium.Cartesian3()), new Cesium.Cartesian3());
+          return Cesium.Cartesian3.distance(point, pb);
+      }
+
+      function isPointInPolygon(point, polygon) {
+          try {
+              const scene = viewer.scene;
+              const positions2D = polygon.map(position => Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
+              const point2D = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, point);
+              if (!point2D || positions2D.some(p => !p)) {
+                  return false;
+              }
+              let inside = false;
+              for (let i = 0, j = positions2D.length - 1; i < positions2D.length; j = i++) {
+                  const xi = positions2D[i].x, yi = positions2D[i].y;
+                  const xj = positions2D[j].x, yj = positions2D[j].y;
+                  const intersect = ((yi > point2D.y) !== (yj > point2D.y)) &&
+                                    (point2D.x < (xj - xi) * (point2D.y - yi) / (yj - yi) + xi);
+                  if (intersect) inside = !inside;
+              }
+              return inside;
+          } catch (error) {
+              console.error("Error in point-in-polygon test:", error);
+              return false;
+          }
+      }
+
+      function updateWorkerStatus(worker, distance) {
+          const workerNumber = worker.number;
+          const status = distance < 10 ? 'danger' : distance < 30 ? 'warning' : 'safe';
+          const statusText = `Worker ${workerNumber} - Distance to hazard: ${distance.toFixed(2)}m`;
+          const isInHazardZone = status === 'danger';
+          const workerIndex = workersInHazardZone.indexOf(workerNumber);
+          if (isInHazardZone && workerIndex === -1) {
+              workersInHazardZone.push(workerNumber);
+              updateHazardAlert();
+          } else if (!isInHazardZone && workerIndex !== -1) {
+              workersInHazardZone.splice(workerIndex, 1);
+              updateHazardAlert();
+          }
+          if (status === 'danger' && !worker.inDanger) {
+              const alert = document.createElement('div');
+              alert.className = 'alert';
+              alert.textContent = `⚠️ WARNING: Worker ${workerNumber} is too close to hazard zone!`;
+              alertsContainer.prepend(alert);
+              setTimeout(() => alert.remove(), 5000);
+              worker.inDanger = true;
+          } else if (status !== 'danger') {
+              worker.inDanger = false;
+          }
+          return { status, statusText };
+      }
+
+      function updateWorkersPositions() {
+          try {
+              const currentTime = Date.now();
+              statusList.innerHTML = '';
+              workers.forEach(worker => {
+                  const elapsed = currentTime - worker.lastUpdate;
+                  const progress = Math.min(1, elapsed / updateInterval);
+                  const currentPos = worker.path[worker.currentPathIndex];
+                  const nextPos = worker.path[(worker.currentPathIndex + 1) % worker.path.length];
+                  const smoothProgress = progress * progress * (3 - 2 * progress);
+                  const interpolatedPos = {
+                      longitude: currentPos.longitude + (nextPos.longitude - currentPos.longitude) * smoothProgress,
+                      latitude: currentPos.latitude + (nextPos.latitude - currentPos.latitude) * smoothProgress
+                  };
+                  const position = Cesium.Cartesian3.fromDegrees(interpolatedPos.longitude, interpolatedPos.latitude, -21);
+                  worker.entity.position = position;
+                  try {
+                      const lastTrailPos = worker.trailPositions.length > 0 ? worker.trailPositions[worker.trailPositions.length - 1] : null;
+                      const shouldAddPoint = !lastTrailPos || Cesium.Cartesian3.distance(lastTrailPos, position) > 2.0;
+                      if (shouldAddPoint) {
+                          const newPosition = Cesium.Cartesian3.clone(position);
+                          worker.trailPositions.push(newPosition);
+                          if (worker.trailPositions.length > 100) {
+                              worker.trailPositions.shift();
+                          }
+                      }
+                  } catch (error) {
+                      console.error("Trail update error:", error);
+                  }
+                  try {
+                      const distance = calculateDistanceToHazard(position);
+                      const { status, statusText } = updateWorkerStatus(worker, distance);
+                      const statusElement = document.createElement('div');
+                      statusElement.className = `worker-status-item ${status}`;
+                      statusElement.textContent = statusText;
+                      statusList.appendChild(statusElement);
+                  } catch (error) {
+                      console.error("Status update error:", error);
+                  }
+                  if (progress === 1) {
+                      worker.currentPathIndex = (worker.currentPathIndex + 1) % worker.path.length;
+                      worker.lastUpdate = currentTime;
+                  }
+              });
+              viewer.scene.requestRender();
+          } catch (error) {
+              console.error("Worker position update error:", error);
+          }
+      }
+
+      let intervalId = setInterval(updateWorkersPositions, 16);
+      function resetInterval() {
+          clearInterval(intervalId);
+          intervalId = setInterval(updateWorkersPositions, 16);
+      }
+    });
+  </script>
+</div>

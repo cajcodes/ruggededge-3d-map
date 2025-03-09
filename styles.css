@@ -1,0 +1,240 @@
+#cesiumContainer {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    position: absolute;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+#controlPanel {
+    position: absolute;
+    top: 80px;
+    right: 20px;
+    width: 300px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    transition: transform 0.3s ease-in-out;
+}
+
+#controlPanel.minimized {
+    transform: translateX(calc(100% - 85px));
+}
+
+#controlPanel.minimized .panel-header {
+    transform: translateX(-20px);
+    width: 85px;
+}
+
+#controlPanel.minimized .panel-header h2 {
+    width: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+#controlPanel.minimized .panel-content {
+    display: none;
+}
+
+#controlPanel.minimized #togglePanel {
+    margin-left: 10px;
+    font-size: 28px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 5px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.panel-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 1.5em;
+}
+
+#togglePanel {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    padding: 0 8px;
+    transition: transform 0.3s ease;
+}
+
+#togglePanel:hover {
+    color: #333;
+}
+
+#controlPanel h3 {
+    margin: 10px 0;
+    color: #555;
+    font-size: 1.1em;
+}
+
+.control-group {
+    margin-bottom: 20px;
+}
+
+input[type="range"] {
+    width: 100%;
+    margin: 10px 0;
+}
+
+select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    background: white;
+}
+
+#workerStatus {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.worker-status-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 5px;
+    border-left: 4px solid #ddd;
+}
+
+.worker-status-item.safe {
+    border-left-color: #4CAF50;
+}
+
+.worker-status-item.warning {
+    border-left-color: #FFC107;
+}
+
+.worker-status-item.danger {
+    border-left-color: #F44336;
+}
+
+#alerts {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #ddd;
+}
+
+.alert {
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background: #F44336;
+    color: white;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.weather-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 999;
+}
+
+.raindrop {
+    position: absolute;
+    width: 2px;
+    height: 20px;
+    background: linear-gradient(transparent, rgba(255, 255, 255, 0.8));
+    animation: fall linear infinite;
+}
+
+@keyframes fall {
+    from {
+        transform: translateY(-120vh) rotate(15deg);
+    }
+    to {
+        transform: translateY(120vh) rotate(15deg);
+    }
+}
+
+.hazard-alert {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    width: auto;
+    height: auto;
+    max-width: 350px;
+    background-color: transparent;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.hazard-alert.hidden {
+    display: none;
+}
+
+.hazard-alert-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: left;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border-left: 10px solid #F44336;
+}
+
+.hazard-alert-content h3 {
+    color: #F44336;
+    margin-top: 0;
+    font-size: 1.3em;
+    display: flex;
+    align-items: center;
+}
+
+.hazard-alert-content p {
+    margin: 10px 0;
+    font-size: 1em;
+    line-height: 1.4;
+}
+
+#closeHazardAlert {
+    background-color: #F44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: block;
+    margin-left: auto;
+}
+
+#closeHazardAlert:hover {
+    background-color: #d32f2f;
+}
